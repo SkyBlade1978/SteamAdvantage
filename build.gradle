@@ -25,9 +25,14 @@ apply plugin: "com.matthewprenger.cursegradle"
 
 def mod_file = getModFile()
 version = getVersion("VERSION", mod_file)
-group= "cyano.steamadvantage"
+group= "com.mcmoddev.steamadvantage"
 archivesBaseName = "SteamAdvantage-1.10.2"
 sourceCompatibility = targetCompatibility = "1.8"
+
+def powerAdvantageDeobfJar = file("../../PowerAdvantage/build/libs/PowerAdvantage-1.10.2-2.4.0-deobf.jar")
+if (!powerAdvantageDeobfJar.exists()) {
+    throw new GradleException("Missing PowerAdvantage deobf jar at ${powerAdvantageDeobfJar}. Run gradlew.bat deobfJar in ../../PowerAdvantage first.")
+}
 
 minecraft {
     version = "1.10.2-12.18.3.2185"
@@ -36,10 +41,6 @@ minecraft {
 }
 
 repositories {
-    maven {
-        name "MMD"
-        url "https://maven.mcmoddev.com/"
-    }
     maven { // Mantle, TCon, JEI
         name "DVS1 Maven FS"
         url "http://dvs1.progwml6.com/files/maven"
@@ -59,8 +60,7 @@ repositories {
 }
 
 dependencies {
-    deobfCompile "cyano:BaseMetals:1.10.2-2.4.0"
-    deobfCompile "cyano:PowerAdvantage:1.10.2-2.3.0"
+    compile files(powerAdvantageDeobfJar)
 }
 
 processResources {
@@ -103,6 +103,7 @@ curseforge {
             displayName = "Steam Advantage $project.version"
             relations {
                 requiredLibrary "poweradvantage"
+                requiredLibrary "base-metals"
             }
         }
         addArtifact sourceJar
