@@ -1,6 +1,7 @@
 package com.mcmoddev.steamadvantage.blocks;
 
 import com.mcmoddev.steamadvantage.init.Blocks;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -27,7 +28,9 @@ public class DrillBitTileEntity extends TileEntity implements ITickable{
 		}
 	}
 	public void setDirection(EnumFacing dir){
+		if(dir == null || dir == this.direction) return;
 		this.direction = dir;
+		syncDirection();
 	}
 	
 	public EnumFacing.Axis getDirection(){
@@ -63,7 +66,7 @@ public class DrillBitTileEntity extends TileEntity implements ITickable{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound root){
 		super.writeToNBT(root);
-		root.setByte("dir", (byte)direction.getIndex());
+		writeDirectionToNBT(root);
 		return root;
 	}
 	
@@ -71,9 +74,12 @@ public class DrillBitTileEntity extends TileEntity implements ITickable{
 	@Override
 	public void readFromNBT(NBTTagCompound root){
 		super.readFromNBT(root);
-		if(root.hasKey("dir")){
-			this.direction = EnumFacing.getFront(root.getByte("dir"));
-		}
+		readDirectionFromNBT(root);
+	}
+
+	@Override
+	public NBTTagCompound getUpdateTag() {
+		return writeToNBT(new NBTTagCompound());
 	}
 
 	/**
@@ -82,7 +88,7 @@ public class DrillBitTileEntity extends TileEntity implements ITickable{
 	@Override 
 	public SPacketUpdateTileEntity getUpdatePacket(){
 		NBTTagCompound nbtTag = new NBTTagCompound();
-		nbtTag.setByte("d",(byte)direction.getIndex());
+		writeDirectionToNBT(nbtTag);
 		return new SPacketUpdateTileEntity(this.pos, 0, nbtTag);
 	}
 	/**
@@ -90,9 +96,26 @@ public class DrillBitTileEntity extends TileEntity implements ITickable{
 	 */
 	@Override
 	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
-		NBTTagCompound tag = packet.getNbtCompound();
-		if(tag.hasKey("d")){
-			this.direction = EnumFacing.getFront(tag.getByte("d"));
+		readDirectionFromNBT(packet.getNbtCompound());
+	}
+
+	private void writeDirectionToNBT(NBTTagCompound root) {
+		root.setByte("dir", (byte)direction.getIndex());
+	}
+
+	private void readDirectionFromNBT(NBTTagCompound root) {
+		if(root.hasKey("dir")){
+			this.direction = EnumFacing.getFront(root.getByte("dir"));
+		} else if(root.hasKey("d")){
+			this.direction = EnumFacing.getFront(root.getByte("d"));
+		}
+	}
+
+	private void syncDirection() {
+		if(hasWorld() && !getWorld().isRemote) {
+			markDirty();
+			IBlockState state = getWorld().getBlockState(getPos());
+			getWorld().notifyBlockUpdate(getPos(), state, state, 3);
 		}
 	}
 }

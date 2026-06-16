@@ -29,9 +29,14 @@ group= "com.mcmoddev.steamadvantage"
 archivesBaseName = "SteamAdvantage-1.10.2"
 sourceCompatibility = targetCompatibility = "1.8"
 
-def powerAdvantageDeobfJar = file("../../PowerAdvantage/build/libs/PowerAdvantage-1.10.2-2.4.0-deobf.jar")
+// SteamAdvantage is compiled against the sibling PowerAdvantage deobf jar because
+// the old public Maven artifacts are no longer available. Build it with
+// `gradlew.bat deobfJar` from the PowerAdvantage project when this file is missing.
+def powerAdvantageProjectDir = file("../../PowerAdvantage")
+def powerAdvantageDeobfJarName = "PowerAdvantage-1.10.2-2.4.0-deobf.jar"
+def powerAdvantageDeobfJar = new File(powerAdvantageProjectDir, "build/libs/${powerAdvantageDeobfJarName}")
 if (!powerAdvantageDeobfJar.exists()) {
-    throw new GradleException("Missing PowerAdvantage deobf jar at ${powerAdvantageDeobfJar}. Run gradlew.bat deobfJar in ../../PowerAdvantage first.")
+    throw new GradleException("Missing PowerAdvantage deobf jar at ${powerAdvantageDeobfJar}. Run gradlew.bat deobfJar in ${powerAdvantageProjectDir} first.")
 }
 
 minecraft {

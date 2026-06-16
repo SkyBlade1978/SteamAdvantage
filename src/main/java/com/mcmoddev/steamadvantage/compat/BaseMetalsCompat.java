@@ -3,6 +3,8 @@ package com.mcmoddev.steamadvantage.compat;
 import com.mcmoddev.steamadvantage.SteamAdvantage;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.FMLLog;
@@ -31,6 +33,11 @@ public final class BaseMetalsCompat {
 		return Loader.isModLoaded(MODID);
 	}
 
+	public static void addCrusherRecipe(String input, ItemStack output) {
+		if (!isLoaded()) return;
+		invokeCrusherRecipe(new Class<?>[]{String.class, ItemStack.class}, new Object[]{input, output});
+	}
+
 	public static void addCrusherRecipe(Item input, ItemStack output) {
 		if (!isLoaded()) return;
 		invokeCrusherRecipe(new Class<?>[]{Item.class, ItemStack.class}, new Object[]{input, output});
@@ -46,14 +53,20 @@ public final class BaseMetalsCompat {
 	}
 
 	public static ItemStack getCrusherRecipeOutput(ItemStack input) {
-		if (!isLoaded() || input == null) return null;
-		return getRecipeOutput(getCrusherRecipe(input, ItemStack.class));
+		if (input == null) return null;
+		if (isLoaded()) {
+			ItemStack output = getRecipeOutput(getCrusherRecipe(input, ItemStack.class));
+			if (output != null) return output;
+		}
+		return getVanillaCrusherOutput(input);
 	}
 
 	public static ItemStack getCrusherRecipeOutput(IBlockState input) {
-		if (!isLoaded() || input == null) return null;
-		ItemStack output = getRecipeOutput(getCrusherRecipe(input, IBlockState.class));
-		if (output != null) return output;
+		if (input == null) return null;
+		if (isLoaded()) {
+			ItemStack output = getRecipeOutput(getCrusherRecipe(input, IBlockState.class));
+			if (output != null) return output;
+		}
 		return getCrusherRecipeOutput(new ItemStack(input.getBlock(), 1, input.getBlock().getMetaFromState(input)));
 	}
 
@@ -97,6 +110,7 @@ public final class BaseMetalsCompat {
 		try {
 			Object instance = registry.getMethod("getInstance").invoke(null);
 			Method method = registry.getMethod("getRecipeForInputItem", inputType);
+			method.setAccessible(true);
 			return method.invoke(instance, input);
 		} catch (NoSuchMethodException e) {
 			return null;
@@ -111,11 +125,53 @@ public final class BaseMetalsCompat {
 
 		try {
 			Method method = recipe.getClass().getMethod("getOutput");
+			method.setAccessible(true);
 			Object output = method.invoke(recipe);
 			return output instanceof ItemStack ? ((ItemStack) output).copy() : null;
 		} catch (ReflectiveOperationException | RuntimeException e) {
 			FMLLog.log(Level.WARN, e, "%s: failed to read BaseMetals crusher recipe output", SteamAdvantage.MODID);
 			return null;
 		}
+	}
+
+	private static ItemStack getVanillaCrusherOutput(ItemStack input) {
+		if (input == null || input.getItem() == null) return null;
+
+		Block block = Block.getBlockFromItem(input.getItem());
+		int meta = input.getMetadata();
+
+		if (block == Blocks.STONE) return new ItemStack(Blocks.COBBLESTONE, 1);
+		if (block == Blocks.STONEBRICK) return new ItemStack(Blocks.COBBLESTONE, 1);
+		if (block == Blocks.STONE_SLAB && (meta == 0 || meta == 5)) return new ItemStack(Blocks.STONE_SLAB, 1, 3);
+		if (block == Blocks.COBBLESTONE || block == Blocks.MOSSY_COBBLESTONE) return new ItemStack(Blocks.GRAVEL, 1);
+		if (block == Blocks.COBBLESTONE_WALL) return new ItemStack(Blocks.GRAVEL, 1);
+		if (block == Blocks.GRAVEL) return new ItemStack(Blocks.SAND, 1);
+		if (block == Blocks.SANDSTONE) return new ItemStack(Blocks.SAND, 4);
+		if (block == Blocks.RED_SANDSTONE) return new ItemStack(Blocks.SAND, 4, 1);
+		if (block == Blocks.STONE_SLAB && meta == 1) return new ItemStack(Blocks.SAND, 2);
+		if (block == Blocks.STONE_SLAB2 && meta == 0) return new ItemStack(Blocks.SAND, 2, 1);
+		if (block == Blocks.GLASS) return new ItemStack(Blocks.SAND, 1);
+		if (block == Blocks.STAINED_GLASS) return new ItemStack(Blocks.SAND, 1, meta);
+		if (block == Blocks.GLOWSTONE) return new ItemStack(Items.GLOWSTONE_DUST, 4);
+		if (block == Blocks.LAPIS_ORE) return new ItemStack(Items.DYE, 8, 4);
+		if (block == Blocks.LAPIS_BLOCK) return new ItemStack(Items.DYE, 9, 4);
+		if (block == Blocks.REDSTONE_ORE || block == Blocks.LIT_REDSTONE_ORE) return new ItemStack(Items.REDSTONE, 8);
+		if (block == Blocks.REDSTONE_BLOCK) return new ItemStack(Items.REDSTONE, 9);
+		if (block == Blocks.QUARTZ_ORE) return new ItemStack(Items.QUARTZ, 2);
+		if (block == Blocks.QUARTZ_BLOCK) return new ItemStack(Items.QUARTZ, 4);
+		if (block == Blocks.PRISMARINE) {
+			if (meta == 1) return new ItemStack(Items.PRISMARINE_SHARD, 9);
+			if (meta == 2) return new ItemStack(Items.PRISMARINE_SHARD, 8);
+			return new ItemStack(Items.PRISMARINE_SHARD, 4);
+		}
+		if (block == Blocks.SEA_LANTERN) return new ItemStack(Items.PRISMARINE_CRYSTALS, 3);
+		if (block == Blocks.SLIME_BLOCK) return new ItemStack(Items.SLIME_BALL, 9);
+		if (block == Blocks.BONE_BLOCK) return new ItemStack(Items.DYE, 9, 15);
+
+		if (input.getItem() == Items.REEDS) return new ItemStack(Items.SUGAR, 2);
+		if (input.getItem() == Items.BONE) return new ItemStack(Items.DYE, 3, 15);
+		if (input.getItem() == Items.BLAZE_ROD) return new ItemStack(Items.BLAZE_POWDER, 2);
+
+		return null;
 	}
 }
