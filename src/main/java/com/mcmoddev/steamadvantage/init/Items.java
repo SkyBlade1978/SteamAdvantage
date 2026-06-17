@@ -5,8 +5,9 @@ import com.mcmoddev.steamadvantage.items.MusketItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
@@ -49,7 +50,8 @@ public abstract class Items {
 	@SuppressWarnings("deprecation")
 	private static Item addItem(String unlocalizedName, Item i){
 		i.setUnlocalizedName(SteamAdvantage.MODID+"."+unlocalizedName);
-		GameRegistry.registerItem(i, unlocalizedName);
+		i.setRegistryName(new ResourceLocation(SteamAdvantage.MODID, unlocalizedName));
+		ForgeRegistries.ITEMS.register(i);
 		i.setCreativeTab(com.mcmoddev.poweradvantage.init.ItemGroups.tab_powerAdvantage);
 		allItems.put(unlocalizedName, i);
 		return i;

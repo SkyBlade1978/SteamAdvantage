@@ -59,7 +59,7 @@ public class PlatformBlock extends Block{
 	@Override
 	public void addCollisionBoxToList(final IBlockState bs, final World world, final BlockPos coord,
 										final AxisAlignedBB box, final List collisionBoxList,
-										final Entity entity) {
+										final Entity entity, final boolean isActualState) {
 		Integer height = ((Integer)world.getBlockState(coord).getValue(HEIGHT));
 		super.addCollisionBoxToList(coord, box, collisionBoxList, boxes[height]);
 	}
@@ -110,7 +110,7 @@ public class PlatformBlock extends Block{
 		}
 	}
 	@Override
-	public void neighborChanged(IBlockState state, World w, BlockPos pos, Block b){
+	public void neighborChanged(IBlockState state, World w, BlockPos pos, Block b, BlockPos fromPos){
 		onNeighborChange(w,pos,pos);
 	}
 

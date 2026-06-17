@@ -1,5 +1,9 @@
 package com.mcmoddev.steamadvantage.machines;
 
+import com.mcmoddev.poweradvantage.util.FluidIdHelper;
+
+import com.mcmoddev.steamadvantage.util.LegacyFluidHandler;
+
 import cyano.poweradvantage.api.ConduitType;
 import cyano.poweradvantage.api.PowerRequest;
 import cyano.poweradvantage.api.fluid.FluidRequest;
@@ -19,7 +23,7 @@ import net.minecraftforge.fluids.*;
 import static com.mcmoddev.steamadvantage.util.SoundHelper.playSoundAtTileEntity;
 
 @SuppressWarnings("deprecation")
-public class SteamStillTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements IFluidHandler{
+public class SteamStillTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements LegacyFluidHandler{
 
 	private final FluidTank outputTank;
 	private final FluidTank inputTank;
@@ -31,8 +35,8 @@ public class SteamStillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 
 	public SteamStillTileEntity() {
 		super(new ConduitType[]{Power.steam_power, Fluids.fluidConduit_general}, new float[]{100,1000}, "tile.steamadvantage.steam_still.name");
-		outputTank = new FluidTank(FluidContainerRegistry.BUCKET_VOLUME );
-		inputTank = new FluidTank(FluidContainerRegistry.BUCKET_VOLUME);
+		outputTank = new FluidTank(Fluid.BUCKET_VOLUME );
+		inputTank = new FluidTank(Fluid.BUCKET_VOLUME);
 	}
 
 	private boolean redstone = true;
@@ -147,16 +151,16 @@ public class SteamStillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	public void prepareDataFieldsForSync() {
 		dataSyncArray[0] = Float.floatToRawIntBits(this.getEnergy(Power.steam_power));
 		dataSyncArray[1] = this.getOutputTank().getFluidAmount();
-		dataSyncArray[2] = FluidRegistry.getFluidID(this.getOutputTank().getFluidAmount() > 0 ? this.getOutputTank().getFluid().getFluid() : FluidRegistry.WATER);
+		dataSyncArray[2] = FluidIdHelper.getFluidId(this.getOutputTank().getFluidAmount() > 0 ? this.getOutputTank().getFluid().getFluid() : FluidRegistry.WATER);
 		dataSyncArray[3] = inputTank.getFluidAmount();
-		dataSyncArray[4] = FluidRegistry.getFluidID(inputTank.getFluidAmount() > 0 ? inputTank.getFluid().getFluid() : FluidRegistry.WATER);
+		dataSyncArray[4] = FluidIdHelper.getFluidId(inputTank.getFluidAmount() > 0 ? inputTank.getFluid().getFluid() : FluidRegistry.WATER);
 	}
 
 	@Override
 	public void onDataFieldUpdate() {
 		this.setEnergy(Float.intBitsToFloat(dataSyncArray[0]), Power.steam_power);
-		this.getOutputTank().setFluid(new FluidStack(FluidRegistry.getFluid(dataSyncArray[2]),dataSyncArray[1]));
-		this.getInputTank().setFluid(new FluidStack(FluidRegistry.getFluid(dataSyncArray[4]),dataSyncArray[3]));
+		this.getOutputTank().setFluid(new FluidStack(FluidIdHelper.getFluid(dataSyncArray[2]),dataSyncArray[1]));
+		this.getInputTank().setFluid(new FluidStack(FluidIdHelper.getFluid(dataSyncArray[4]),dataSyncArray[3]));
 	}
 
 

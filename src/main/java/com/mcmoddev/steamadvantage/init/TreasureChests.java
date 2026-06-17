@@ -93,11 +93,13 @@ public class TreasureChests {
 			"                {\n" +
 			"                    \"type\": \"item\",\n" +
 			"                    \"name\": \"steamadvantage:musket\",\n" +
+			"                    \"entryName\": \"steamadvantage:musket_plain\",\n" +
 			"                    \"weight\": 18\n" +
 			"                },\n" +
 			"                {\n" +
 			"                    \"type\": \"item\",\n" +
 			"                    \"name\": \"steamadvantage:musket\",\n" +
+			"                    \"entryName\": \"steamadvantage:musket_enchanted\",\n" +
 			"                    \"weight\": 2,\n" +
 			"                    \"functions\": [\n" +
 			"                        {\n" +

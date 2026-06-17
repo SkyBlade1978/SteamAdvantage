@@ -67,7 +67,7 @@ public class DrillBitBlock extends Block implements ITileEntityProvider {
 
 	private static final AxisAlignedBB blockBounds = new AxisAlignedBB(0.25f, 0.25f, 0.25f, 0.75f, 0.75f, 0.75f);
 	@Override
-	public void addCollisionBoxToList(final IBlockState state, final World w, final BlockPos coord, final AxisAlignedBB bb, final List<AxisAlignedBB> list, final Entity e) {
+	public void addCollisionBoxToList(final IBlockState state, final World w, final BlockPos coord, final AxisAlignedBB bb, final List<AxisAlignedBB> list, final Entity e, final boolean isActualState) {
 		super.addCollisionBoxToList(coord, bb, list, blockBounds);
 	}
 

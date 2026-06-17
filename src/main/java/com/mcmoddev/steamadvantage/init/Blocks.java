@@ -10,8 +10,10 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
@@ -80,7 +82,12 @@ public abstract class Blocks {
 	@SuppressWarnings("deprecation")
 	private static Block addBlock(Block block, String name ){
 		block.setUnlocalizedName(SteamAdvantage.MODID+"."+name);
-		GameRegistry.registerBlock(block, name);
+		ResourceLocation registryName = new ResourceLocation(SteamAdvantage.MODID, name);
+		block.setRegistryName(registryName);
+		ForgeRegistries.BLOCKS.register(block);
+		ItemBlock itemBlock = new ItemBlock(block);
+		itemBlock.setRegistryName(registryName);
+		ForgeRegistries.ITEMS.register(itemBlock);
 		block.setCreativeTab(com.mcmoddev.poweradvantage.init.ItemGroups.tab_powerAdvantage);
 		allBlocks.put(name, block);
 		return block;

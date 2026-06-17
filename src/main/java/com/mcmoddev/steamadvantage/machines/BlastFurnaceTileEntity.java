@@ -97,7 +97,8 @@ public class BlastFurnaceTileEntity extends cyano.poweradvantage.api.simple.Tile
 						if(progress[i] >= 1){
 							progress[i] = 0;
 							doSmelt(slot);
-							if(--inventory[slot].stackSize <= 0){inventory[slot] = null;} // decrement the input slot
+							inventory[slot].shrink(1);
+							if(inventory[slot].isEmpty()){inventory[slot] = null;} // decrement the input slot
 							if(!smeltSuccess){
 								playSoundAtTileEntity(SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.AMBIENT, 0.5f, 1f, this);
 							}
@@ -119,12 +120,12 @@ public class BlastFurnaceTileEntity extends cyano.poweradvantage.api.simple.Tile
 		ItemStack input = inventory[slot];
 		if(input == null) return false;
 		ItemStack output = FurnaceRecipes.instance().getSmeltingResult(input);
-		if(output == null) return false;
+		if(output.isEmpty()) return false;
 		ItemStack outputSlot = inventory[slot+3];
 		if(outputSlot == null) return true;
 		return (ItemStack.areItemsEqual(output, outputSlot) 
 				&& ItemStack.areItemStackTagsEqual(output, outputSlot)
-				&& (output.stackSize + outputSlot.stackSize) <= outputSlot.getMaxStackSize());
+				&& (output.getCount() + outputSlot.getCount()) <= outputSlot.getMaxStackSize());
 	}
 	
 	private void doSmelt(int slot) {
@@ -134,7 +135,7 @@ public class BlastFurnaceTileEntity extends cyano.poweradvantage.api.simple.Tile
 		if(outputSlot == null){
 			inventory[slot+3] = output.copy();
 		} else {
-			outputSlot.stackSize += output.stackSize;
+			outputSlot.grow(output.getCount());
 		}
 		
 	}
@@ -187,7 +188,7 @@ public class BlastFurnaceTileEntity extends cyano.poweradvantage.api.simple.Tile
 	}
 	
 	private void decrementFuel() {
-		if(inventory[0].stackSize == 1 && inventory[0].getItem().getContainerItem(inventory[0]) != null){
+		if(inventory[0].getCount() == 1 && inventory[0].getItem().getContainerItem(inventory[0]) != null){
 			inventory[0] = inventory[0].getItem().getContainerItem(inventory[0]);
 		} else {
 			this.decrStackSize(0, 1);
@@ -269,7 +270,7 @@ public class BlastFurnaceTileEntity extends cyano.poweradvantage.api.simple.Tile
 		int sum = 0;
 		for(int n = 0; n < 3; n++){
 			if(inventory[n] != null){
-				sum += inventory[n].stackSize * 64 / inventory[n].getMaxStackSize();
+				sum += inventory[n].getCount() * 64 / inventory[n].getMaxStackSize();
 			}
 		}
 		if(sum == 0) return 0;

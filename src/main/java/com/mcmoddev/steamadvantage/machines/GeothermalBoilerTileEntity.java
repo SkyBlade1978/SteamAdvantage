@@ -1,5 +1,7 @@
 package com.mcmoddev.steamadvantage.machines;
 
+import com.mcmoddev.steamadvantage.util.LegacyFluidHandler;
+
 import cyano.poweradvantage.api.ConduitType;
 import cyano.poweradvantage.api.PowerRequest;
 import cyano.poweradvantage.api.fluid.FluidRequest;
@@ -19,7 +21,7 @@ import net.minecraftforge.fluids.*;
 import static com.mcmoddev.steamadvantage.util.SoundHelper.playSoundAtTileEntity;
 
 @SuppressWarnings("deprecation")
-public class GeothermalBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements IFluidHandler{
+public class GeothermalBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements LegacyFluidHandler{
 
 	
 	private final FluidTank tank;
@@ -38,7 +40,7 @@ public class GeothermalBoilerTileEntity extends cyano.poweradvantage.api.simple.
 	
 	public GeothermalBoilerTileEntity() {
 		super(new ConduitType[]{Power.steam_power,Fluids.fluidConduit_general}, new float[]{100,1000}, "tile.steamadvantage.steam_boiler_geothermal.name");
-		tank = new FluidTank(FluidContainerRegistry.BUCKET_VOLUME * 2);
+		tank = new FluidTank(Fluid.BUCKET_VOLUME * 2);
 		inventory = new ItemStack[0];
 	}
 	

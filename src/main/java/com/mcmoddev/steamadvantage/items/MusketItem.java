@@ -102,7 +102,8 @@ public class MusketItem extends net.minecraft.item.Item{
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack srcItemStack, World world, EntityPlayer playerEntity, EnumHand hand){
+	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer playerEntity, EnumHand hand){
+		ItemStack srcItemStack = playerEntity.getHeldItem(hand);
 		if(hand != EnumHand.MAIN_HAND) return ActionResult.newResult(EnumActionResult.PASS,srcItemStack);
 		if(!hasAmmo(playerEntity, srcItemStack)) return ActionResult.newResult(EnumActionResult.FAIL,srcItemStack);
 		if(isNotLoaded(srcItemStack) && EnchantmentHelper.getEnchantmentLevel(Enchantments.rapid_reload, srcItemStack) > 0){
@@ -157,7 +158,7 @@ public class MusketItem extends net.minecraft.item.Item{
 		}
 		Vec3d lookVector = playerEntity.getLookVec();
 		spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, world,
-				playerEntity.posX+lookVector.xCoord, playerEntity.posY+playerEntity.getEyeHeight()+lookVector.yCoord, playerEntity.posZ + lookVector.zCoord);
+				playerEntity.posX+lookVector.x, playerEntity.posY+playerEntity.getEyeHeight()+lookVector.y, playerEntity.posZ + lookVector.z);
 		if(world.isRemote){
 			playerEntity.rotationPitch -= 15;
 			return;
@@ -166,7 +167,7 @@ public class MusketItem extends net.minecraft.item.Item{
 		playBigSoundAtPosition(playerEntity.posX,playerEntity.posY,playerEntity.posZ, SoundEvents.ENTITY_FIREWORK_BLAST,SoundCategory.PLAYERS,2F,0.5F,world);
 		
 		Vec3d start = new Vec3d(playerEntity.posX, playerEntity.posY+playerEntity.getEyeHeight(),playerEntity.posZ);
-		start.addVector(MAX_RANGE * lookVector.xCoord, MAX_RANGE * lookVector.yCoord, MAX_RANGE * lookVector.zCoord);
+		start.addVector(MAX_RANGE * lookVector.x, MAX_RANGE * lookVector.y, MAX_RANGE * lookVector.z);
 		RayTraceResult rayTrace = rayTraceBlocksAndEntities(world,MAX_RANGE,playerEntity);
 		if(rayTrace == null){
 			// no collisions
@@ -189,7 +190,7 @@ public class MusketItem extends net.minecraft.item.Item{
 				}
 			}
 		} else if(rayTrace.typeOfHit == RayTraceResult.Type.BLOCK){
-			playSoundAtPosition(rayTrace.hitVec.xCoord, rayTrace.hitVec.yCoord, rayTrace.hitVec.zCoord, 
+			playSoundAtPosition(rayTrace.hitVec.x, rayTrace.hitVec.y, rayTrace.hitVec.z, 
 					SoundEvents.BLOCK_GRAVEL_HIT, SoundCategory.BLOCKS, 1f, 1f, world);
 			BlockPos coord = rayTrace.getBlockPos();
 			if(coord.getY()>= 0 && coord.getY() <= 255 && !world.isAirBlock(coord)){
@@ -211,11 +212,11 @@ public class MusketItem extends net.minecraft.item.Item{
 			}
 			if(EnchantmentHelper.getEnchantmentLevel(Enchantments.high_explosive, srcItemStack) > 0){
 				int lvl = EnchantmentHelper.getEnchantmentLevel(Enchantments.high_explosive, srcItemStack);
-				world.createExplosion(playerEntity, rayTrace.hitVec.xCoord, rayTrace.hitVec.yCoord, rayTrace.hitVec.zCoord, 
+				world.createExplosion(playerEntity, rayTrace.hitVec.x, rayTrace.hitVec.y, rayTrace.hitVec.z, 
 						explodeFactor * lvl, 
 						true);
-				AxisAlignedBB fireArea = new AxisAlignedBB(rayTrace.hitVec.xCoord-lvl, rayTrace.hitVec.yCoord-lvl, rayTrace.hitVec.zCoord-lvl,
-						rayTrace.hitVec.xCoord+lvl, rayTrace.hitVec.yCoord+lvl, rayTrace.hitVec.zCoord+lvl);
+				AxisAlignedBB fireArea = new AxisAlignedBB(rayTrace.hitVec.x-lvl, rayTrace.hitVec.y-lvl, rayTrace.hitVec.z-lvl,
+						rayTrace.hitVec.x+lvl, rayTrace.hitVec.y+lvl, rayTrace.hitVec.z+lvl);
 				List<EntityLivingBase> collateralDamage = world.getEntitiesWithinAABB(EntityLivingBase.class, fireArea);
 				for(EntityLivingBase victim : collateralDamage){
 					victim.setFire(lvl);
@@ -224,9 +225,9 @@ public class MusketItem extends net.minecraft.item.Item{
 		}
 		if(rayTrace.typeOfHit != RayTraceResult.Type.MISS && rayTrace.hitVec != null){
 			spawnParticle(EnumParticleTypes.SMOKE_LARGE, world,
-					rayTrace.hitVec.xCoord, rayTrace.hitVec.yCoord, rayTrace.hitVec.zCoord);
+					rayTrace.hitVec.x, rayTrace.hitVec.y, rayTrace.hitVec.z);
 			spawnParticle(EnumParticleTypes.EXPLOSION_NORMAL, world,
-					rayTrace.hitVec.xCoord, rayTrace.hitVec.yCoord, rayTrace.hitVec.zCoord);
+					rayTrace.hitVec.x, rayTrace.hitVec.y, rayTrace.hitVec.z);
 		}
 		
 		// recoil enchantment kicks you back
@@ -234,9 +235,9 @@ public class MusketItem extends net.minecraft.item.Item{
 		if(recoil > 0){
 			double c = -0.3;
 			double lateral = 2.0;
-			playerEntity.addVelocity(c * recoil * lookVector.xCoord * lateral, 
-					c * recoil * lookVector.yCoord, 
-					c * recoil * lookVector.zCoord * lateral);
+			playerEntity.addVelocity(c * recoil * lookVector.x * lateral, 
+					c * recoil * lookVector.y, 
+					c * recoil * lookVector.z * lateral);
 			if(!world.isRemote){
 				// send update packet from server
 				((EntityPlayerMP) playerEntity).connection.sendPacket(new SPacketEntityVelocity(playerEntity));
@@ -327,10 +328,11 @@ public class MusketItem extends net.minecraft.item.Item{
 					|| EnchantmentHelper.getEnchantmentLevel(net.minecraft.init.Enchantments.INFINITY, musket) > 0
 					|| EnchantmentHelper.getEnchantmentLevel(Enchantments.powderless, musket) > 0) return true;
 			List<ItemStack> ammoItems = OreDictionary.getOres("ammoBlackpowder");
-			for (int i = 0; i < playerEntity.inventory.mainInventory.length; i++) {
-				if (playerEntity.inventory.mainInventory[i] == null) continue;
+			for (int i = 0; i < playerEntity.inventory.mainInventory.size(); i++) {
+				ItemStack inventoryStack = playerEntity.inventory.mainInventory.get(i);
+				if (inventoryStack.isEmpty()) continue;
 				for (int n = 0; n < ammoItems.size(); n++) {
-					if (OreDictionary.itemMatches(ammoItems.get(n), playerEntity.inventory.mainInventory[i], false)) {
+					if (OreDictionary.itemMatches(ammoItems.get(n), inventoryStack, false)) {
 						return true;
 					}
 				}
@@ -347,13 +349,14 @@ public class MusketItem extends net.minecraft.item.Item{
 					|| EnchantmentHelper.getEnchantmentLevel(net.minecraft.init.Enchantments.INFINITY, musket) > 0
 					|| EnchantmentHelper.getEnchantmentLevel(Enchantments.powderless, musket) > 0) return;
 			List<ItemStack> ammoItems = OreDictionary.getOres("ammoBlackpowder");
-			for (int i = 0; i < playerEntity.inventory.mainInventory.length; i++) {
-				if (playerEntity.inventory.mainInventory[i] == null) continue;
+			for (int i = 0; i < playerEntity.inventory.mainInventory.size(); i++) {
+				ItemStack inventoryStack = playerEntity.inventory.mainInventory.get(i);
+				if (inventoryStack.isEmpty()) continue;
 				for (int n = 0; n < ammoItems.size(); n++) {
-					if (OreDictionary.itemMatches(ammoItems.get(n), playerEntity.inventory.mainInventory[i], false)) {
-						playerEntity.inventory.mainInventory[i].stackSize--;
-						if (playerEntity.inventory.mainInventory[i].stackSize <= 0) {
-							playerEntity.inventory.mainInventory[i] = null;
+					if (OreDictionary.itemMatches(ammoItems.get(n), inventoryStack, false)) {
+						inventoryStack.shrink(1);
+						if (inventoryStack.isEmpty()) {
+							playerEntity.inventory.mainInventory.set(i, ItemStack.EMPTY);
 						}
 						return;
 					}
@@ -400,13 +403,13 @@ public class MusketItem extends net.minecraft.item.Item{
 	public static boolean rayIntersectsBoundingBox(Vec3d rayOrigin, Vec3d rayDirection, AxisAlignedBB box){
 		if(box == null) return false;
 		// algorithm from http://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
-		Vec3d inverse = new Vec3d(1.0 / rayDirection.xCoord, 1.0 / rayDirection.yCoord, 1.0 / rayDirection.zCoord);
-		double t1 = (box.minX - rayOrigin.xCoord)*inverse.xCoord;
-		double t2 = (box.maxX- rayOrigin.xCoord)*inverse.xCoord;
-		double t3 = (box.minY - rayOrigin.yCoord)*inverse.yCoord;
-		double t4 = (box.maxY - rayOrigin.yCoord)*inverse.yCoord;
-		double t5 = (box.minZ - rayOrigin.zCoord)*inverse.zCoord;
-		double t6 = (box.maxZ - rayOrigin.zCoord)*inverse.zCoord;
+		Vec3d inverse = new Vec3d(1.0 / rayDirection.x, 1.0 / rayDirection.y, 1.0 / rayDirection.z);
+		double t1 = (box.minX - rayOrigin.x)*inverse.x;
+		double t2 = (box.maxX- rayOrigin.x)*inverse.x;
+		double t3 = (box.minY - rayOrigin.y)*inverse.y;
+		double t4 = (box.maxY - rayOrigin.y)*inverse.y;
+		double t5 = (box.minZ - rayOrigin.z)*inverse.z;
+		double t6 = (box.maxZ - rayOrigin.z)*inverse.z;
 
 		double tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
 		double tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
@@ -428,7 +431,7 @@ public class MusketItem extends net.minecraft.item.Item{
 	
 	
 	private static Vec3d mul(Vec3d a, double b){
-		return new Vec3d(a.xCoord * b, a.yCoord * b, a.zCoord * b);
+		return new Vec3d(a.x * b, a.y * b, a.z * b);
 	}
 	private static double max(double a, double b){
 		return Math.max(a, b);
@@ -451,8 +454,8 @@ public class MusketItem extends net.minecraft.item.Item{
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer player, List<String> list, boolean b){
-		super.addInformation(stack,player,list,b);
+	public void addInformation(ItemStack stack, World world, List<String> list, net.minecraft.client.util.ITooltipFlag flag){
+		super.addInformation(stack,world,list,flag);
 		list.add(I18n.translateToLocal("tooltip.musket.damage").replace("%x", String.valueOf((int)MusketItem.getShotDamage())));
 		if(isLoaded(stack)){
 			list.add(I18n.translateToLocal("tooltip.musket.loaded"));

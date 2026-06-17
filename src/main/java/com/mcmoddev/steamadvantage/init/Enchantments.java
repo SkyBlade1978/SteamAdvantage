@@ -7,54 +7,38 @@ import com.mcmoddev.steamadvantage.enchantments.RapidReloadEnchantment;
 import com.mcmoddev.steamadvantage.enchantments.RecoilEnchantment;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.FMLLog;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.util.HashSet;
-import java.util.Set;
-
+@Mod.EventBusSubscriber(modid = SteamAdvantage.MODID)
 public class Enchantments {
 
 	public static Enchantment rapid_reload;
 	public static Enchantment powderless;
 	public static Enchantment high_explosive;
 	public static Enchantment recoil;
-	
-	private static boolean initDone = false;
-	public static void init(){
-		if(initDone) return;
 
+	public static void init(){
+		createEnchantments();
+	}
+
+	@SubscribeEvent
+	public static void registerEnchantments(RegistryEvent.Register<Enchantment> event) {
+		createEnchantments();
+		event.getRegistry().registerAll(high_explosive, powderless, rapid_reload, recoil);
+	}
+
+	private static void createEnchantments() {
+		if(high_explosive != null) return;
 		high_explosive = new HighExplosiveEnchantment();
 		powderless = new PowderlessEnchantment();
 		rapid_reload = new RapidReloadEnchantment();
 		recoil = new RecoilEnchantment();
 
-		Enchantment.REGISTRY.register(getNextEnchantmentID(),
-				new ResourceLocation(SteamAdvantage.MODID+":"+"high_explosive"),
-				high_explosive);
-		Enchantment.REGISTRY.register(getNextEnchantmentID(),
-				new ResourceLocation(SteamAdvantage.MODID+":"+"powderless"),
-				powderless);
-		Enchantment.REGISTRY.register(getNextEnchantmentID(),
-				new ResourceLocation(SteamAdvantage.MODID+":"+"rapid_reload"),
-				rapid_reload);
-		Enchantment.REGISTRY.register(getNextEnchantmentID(),
-				new ResourceLocation(SteamAdvantage.MODID+":"+"recoil"),
-				recoil);
-
-		
-		initDone = true;
-	}
-
-	
-	private static final Set<Integer> reservedIDs = new HashSet<>();
-	private static int getNextEnchantmentID(){
-		for(int i = 0; i < 255; i++){
-			if(Enchantment.REGISTRY.getObjectById(i) == null && reservedIDs.contains(i) == false){
-				reservedIDs.add(i);
-				return i;
-			}
-		}
-		FMLLog.severe("Failed to find free enchantment ID!");
-		return 255;
+		high_explosive.setRegistryName(new ResourceLocation(SteamAdvantage.MODID, "high_explosive"));
+		powderless.setRegistryName(new ResourceLocation(SteamAdvantage.MODID, "powderless"));
+		rapid_reload.setRegistryName(new ResourceLocation(SteamAdvantage.MODID, "rapid_reload"));
+		recoil.setRegistryName(new ResourceLocation(SteamAdvantage.MODID, "recoil"));
 	}
 }

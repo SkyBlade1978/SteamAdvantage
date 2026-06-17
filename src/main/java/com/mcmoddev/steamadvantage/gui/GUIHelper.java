@@ -3,7 +3,7 @@ package com.mcmoddev.steamadvantage.gui;
 import cyano.poweradvantage.api.simple.SimpleMachineGUI.GUIContainer;
 import com.mcmoddev.poweradvantage.gui.FluidTankGUI;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
@@ -39,7 +39,7 @@ public abstract class GUIHelper {
 		float angle = (1f - value) * PI;
 		float offsetX = pivotX;
 		float offsetY = pivotY;
-		VertexBuffer renderer = Tessellator.getInstance().getBuffer();
+		BufferBuilder renderer = Tessellator.getInstance().getBuffer();
 
 		float sin = MathHelper.sin(angle);
 		float cos = MathHelper.cos(angle);

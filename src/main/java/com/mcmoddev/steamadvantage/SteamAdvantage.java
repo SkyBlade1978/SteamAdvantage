@@ -34,8 +34,9 @@ import java.util.Map;
  * - Oil-Burning Steam Boiler
  * - Bioreactor (slowly makes liquid fuel from organic matter)
  */
-@Mod(modid = SteamAdvantage.MODID, version = SteamAdvantage.VERSION, name=SteamAdvantage.NAME, 
-		dependencies = "required-after:poweradvantage;after:basemetals")
+@Mod(modid = SteamAdvantage.MODID, version = SteamAdvantage.VERSION, name=SteamAdvantage.NAME,
+		dependencies = "required-after:poweradvantage;after:basemetals",
+		acceptedMinecraftVersions = "[1.12.2]")
 public class SteamAdvantage
 {/** The identifier for this mod */
 	public static final String MODID = "steamadvantage";
@@ -57,6 +58,8 @@ public class SteamAdvantage
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event)
 	{
+		Entities.registerDataFixers();
+
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		config.load();
 

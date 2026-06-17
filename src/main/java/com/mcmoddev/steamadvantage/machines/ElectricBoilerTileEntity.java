@@ -14,15 +14,14 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
 import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import com.mcmoddev.steamadvantage.util.LegacyFluidHandler;
 
 @SuppressWarnings("deprecation")
-public class ElectricBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements IFluidHandler{
+public class ElectricBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements LegacyFluidHandler{
 
 	static final ConduitType ELECTRIC_POWER = new ConduitType("electricity");
 
@@ -41,7 +40,7 @@ public class ElectricBoilerTileEntity extends cyano.poweradvantage.api.simple.Ti
 		super(new ConduitType[]{Power.steam_power, ELECTRIC_POWER, Fluids.fluidConduit_general},
 				new float[]{100, MAX_ELECTRICITY, 1000},
 				"tile.steamadvantage.steam_boiler_electric.name");
-		tank = new FluidTank(FluidContainerRegistry.BUCKET_VOLUME * 2);
+		tank = new FluidTank(Fluid.BUCKET_VOLUME * 2);
 		inventory = new ItemStack[0];
 	}
 

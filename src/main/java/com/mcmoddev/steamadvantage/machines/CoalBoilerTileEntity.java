@@ -15,15 +15,14 @@ import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
 import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import com.mcmoddev.steamadvantage.util.LegacyFluidHandler;
 
 @SuppressWarnings("deprecation")
-public class CoalBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements IFluidHandler{
+public class CoalBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements LegacyFluidHandler{
 
 	
 	public static final int LAVA_REQUEST_SIZE = 100;
@@ -40,7 +39,7 @@ public class CoalBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	
 	public CoalBoilerTileEntity() {
 		super(new ConduitType[]{Power.steam_power,Fluids.fluidConduit_general}, new float[]{1000,1000}, "tile.steamadvantage.steam_boiler_coal.name");
-		tank = new FluidTank(FluidContainerRegistry.BUCKET_VOLUME * 4);
+		tank = new FluidTank(Fluid.BUCKET_VOLUME * 4);
 		inventory = new ItemStack[1];
 	}
 
@@ -103,7 +102,7 @@ public class CoalBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	
 
 	private void decrementFuel() {
-		if(inventory[0].stackSize == 1 && inventory[0].getItem().getContainerItem(inventory[0]) != null){
+		if(inventory[0].getCount() == 1 && inventory[0].getItem().getContainerItem(inventory[0]) != null){
 			inventory[0] = inventory[0].getItem().getContainerItem(inventory[0]);
 		} else {
 			this.decrStackSize(0, 1);
@@ -240,7 +239,7 @@ public class CoalBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	
 	public int getComparatorOutput() {
 		if(inventory[0] == null) return 0;
-		return Math.min(Math.max(15 * inventory[0].stackSize * inventory[0].getMaxStackSize() / inventory[0].getMaxStackSize(),1),15);
+		return Math.min(Math.max(15 * inventory[0].getCount() * inventory[0].getMaxStackSize() / inventory[0].getMaxStackSize(),1),15);
 	}
 	
 	///// Overrides to make this a multi-type block /////

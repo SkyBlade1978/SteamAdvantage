@@ -60,7 +60,7 @@ public class PumpPipeBlock extends Block{
 
 	private static final AxisAlignedBB blockBounds = new AxisAlignedBB(0.0f, 0.25f, 0.0f, 0.75f, 1.0f, 1.0f);
 	@Override
-	public void addCollisionBoxToList(final IBlockState state, final World w, final BlockPos coord, final AxisAlignedBB bb, final List<AxisAlignedBB> list, final Entity e) {
+	public void addCollisionBoxToList(final IBlockState state, final World w, final BlockPos coord, final AxisAlignedBB bb, final List<AxisAlignedBB> list, final Entity e, final boolean isActualState) {
 		super.addCollisionBoxToList(coord, bb, list, blockBounds);
 	}
 

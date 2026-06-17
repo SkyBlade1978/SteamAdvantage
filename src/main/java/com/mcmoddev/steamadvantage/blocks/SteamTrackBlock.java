@@ -27,7 +27,7 @@ public class SteamTrackBlock extends cyano.poweradvantage.api.simple.BlockSimple
 	@Override
 	public void addCollisionBoxToList(final IBlockState bs, final World world, final BlockPos coord,
 			final AxisAlignedBB box, final List collisionBoxList,
-			final Entity entity) {
+			final Entity entity, final boolean isActualState) {
 		super.addCollisionBoxToList(coord, box, collisionBoxList, FULL_BLOCK_AABB);
 	}
 	

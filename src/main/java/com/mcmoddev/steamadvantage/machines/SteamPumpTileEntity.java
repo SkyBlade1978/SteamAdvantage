@@ -1,9 +1,14 @@
 package com.mcmoddev.steamadvantage.machines;
 
+import com.mcmoddev.poweradvantage.util.FluidIdHelper;
+
+import com.mcmoddev.steamadvantage.util.LegacyFluidHandler;
+
 import cyano.poweradvantage.api.ConduitType;
 import cyano.poweradvantage.api.PowerRequest;
 import com.mcmoddev.poweradvantage.conduitnetwork.ConduitRegistry;
 import com.mcmoddev.poweradvantage.init.Fluids;
+import com.mcmoddev.poweradvantage.util.FluidHandlerHelper;
 import com.mcmoddev.steamadvantage.init.Power;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
@@ -19,6 +24,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.*;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,7 +32,7 @@ import java.util.Set;
 import static com.mcmoddev.steamadvantage.util.SoundHelper.playSoundAtTileEntity;
 
 @SuppressWarnings("deprecation")
-public class SteamPumpTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements IFluidHandler{
+public class SteamPumpTileEntity extends cyano.poweradvantage.api.simple.TileEntitySimplePowerMachine implements LegacyFluidHandler{
 
 	private final FluidTank tank;
 	public static final float ENERGY_COST_PIPE = 5f;
@@ -43,7 +49,7 @@ public class SteamPumpTileEntity extends cyano.poweradvantage.api.simple.TileEnt
 
 	public SteamPumpTileEntity() {
 		super(new ConduitType[]{Power.steam_power,Fluids.fluidConduit_general}, new float[]{300f,1000f}, "tile.steamadvantage.steam_pump.name");
-		tank = new FluidTank(FluidContainerRegistry.BUCKET_VOLUME);
+		tank = new FluidTank(Fluid.BUCKET_VOLUME);
 	}
 
 	private boolean redstone = true;
@@ -83,7 +89,7 @@ public class SteamPumpTileEntity extends cyano.poweradvantage.api.simple.TileEnt
 							IBlockState blockstate = w.getBlockState(fluidSource);
 							Fluid f = getFluid(blockstate);
 							if(f != null && getEnergy(Power.steam_power) >= cost){
-								this.getTank().fill(new FluidStack(f,FluidContainerRegistry.BUCKET_VOLUME), true);
+								this.getTank().fill(new FluidStack(f,Fluid.BUCKET_VOLUME), true);
 								this.subtractEnergy(cost, Power.steam_power);
 								w.setBlockToAir(fluidSource);
 								success = true;
@@ -198,9 +204,9 @@ public class SteamPumpTileEntity extends cyano.poweradvantage.api.simple.TileEnt
 					EnumFacing dir = EnumFacing.values()[i];
 					BlockPos nPos = getPos().offset(dir);
 					TileEntity neighbor = getWorld().getTileEntity(nPos);
-					if(neighbor instanceof IFluidHandler
-							&& ((IFluidHandler)neighbor).canFill(dir.getOpposite(),fluid.getFluid())){
-						int d = ((IFluidHandler)neighbor).fill(dir.getOpposite(),fluid,true);
+					IFluidHandler handler = FluidHandlerHelper.getHandler(neighbor, dir.getOpposite());
+					if(handler != null){
+						int d = handler.fill(fluid,true);
 						getTank().drain(Math.max(d,1),true); // no free energy!
 						fluid = getTank().getFluid();
 					}
@@ -253,14 +259,14 @@ public class SteamPumpTileEntity extends cyano.poweradvantage.api.simple.TileEnt
 	public void prepareDataFieldsForSync() {
 		dataSyncArray[0] = Float.floatToRawIntBits(this.getEnergy(Power.steam_power));
 		dataSyncArray[1] = this.getTank().getFluidAmount();
-		dataSyncArray[2] = (this.getTank().getFluidAmount() > 0 ? FluidRegistry.getFluidID(this.getTank().getFluid().getFluid()) : FluidRegistry.getFluidID(FluidRegistry.WATER));
+		dataSyncArray[2] = (this.getTank().getFluidAmount() > 0 ? FluidIdHelper.getFluidId(this.getTank().getFluid().getFluid()) : FluidIdHelper.getFluidId(FluidRegistry.WATER));
 		dataSyncArray[3] = this.timeUntilNextPump;
 	}
 
 	@Override
 	public void onDataFieldUpdate() {
 		this.setEnergy(Float.intBitsToFloat(dataSyncArray[0]), Power.steam_power);
-		this.getTank().setFluid(new FluidStack(FluidRegistry.getFluid(dataSyncArray[2]),dataSyncArray[1]));
+		this.getTank().setFluid(new FluidStack(FluidIdHelper.getFluid(dataSyncArray[2]),dataSyncArray[1]));
 		this.timeUntilNextPump = (byte)dataSyncArray[3];
 	}
 

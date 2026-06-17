@@ -43,10 +43,10 @@ public class RockCrusherTileEntity extends cyano.poweradvantage.api.simple.TileE
 		if(isServerWorld){
 			// reset progress when item in slot changes
 			ItemStack input = inventory[0];
-			if(itemCheck != null && ItemStack.areItemsEqual(itemCheck, input) == false){
+			if(itemCheck != null && (input == null || input.isEmpty() || ItemStack.areItemsEqual(itemCheck, input) == false)){
 				progress = 0;
 			}
-			itemCheck  = input;
+			itemCheck  = (input == null || input.isEmpty()) ? null : input.copy();
 			
 			// disabled by redstone
 			if(redstone){
@@ -83,9 +83,10 @@ public class RockCrusherTileEntity extends cyano.poweradvantage.api.simple.TileE
 							if(inventory[availableSlot] == null){
 								inventory[availableSlot] = output.copy();
 							} else {
-								inventory[availableSlot].stackSize += output.stackSize;
+								inventory[availableSlot].grow(output.getCount());
 							}
-							if(--inventory[0].stackSize <= 0){inventory[0] = null;} // decrement the input slot
+							inventory[0].shrink(1);
+							if(inventory[0].isEmpty()){inventory[0] = null;} // decrement the input slot
 							progress = 0;
 							playSoundAtTileEntity( SoundEvents.BLOCK_GRAVEL_BREAK, SoundCategory.AMBIENT, 0.5f, 0.2f, this);
 						}
@@ -173,7 +174,7 @@ public class RockCrusherTileEntity extends cyano.poweradvantage.api.simple.TileE
 		for(int i = 1; i < inventory.length; i++){
 			if(inventory[i] == null) {return i;}
 			if(ItemStack.areItemsEqual(output, inventory[i]) && ItemStack.areItemStackTagsEqual(output, inventory[i])
-					&& (inventory[i].stackSize + output.stackSize) <= inventory[i].getMaxStackSize()){
+					&& (inventory[i].getCount() + output.getCount()) <= inventory[i].getMaxStackSize()){
 				return i;
 			}
 		}
@@ -199,7 +200,7 @@ public class RockCrusherTileEntity extends cyano.poweradvantage.api.simple.TileE
 
 	public int getComparatorOutput() {
 		if(inventory[0] == null) return 0;
-		return Math.min(Math.max(15 * inventory[0].stackSize * inventory[0].getMaxStackSize() / inventory[0].getMaxStackSize(),1),15);
+		return Math.min(Math.max(15 * inventory[0].getCount() * inventory[0].getMaxStackSize() / inventory[0].getMaxStackSize(),1),15);
 	}
 	
 ///// Item Handling (for hoppers) /////
