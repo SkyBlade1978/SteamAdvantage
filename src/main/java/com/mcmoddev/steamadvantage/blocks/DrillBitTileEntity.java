@@ -89,7 +89,7 @@ public class DrillBitTileEntity extends TileEntity implements ITickable{
 	public SPacketUpdateTileEntity getUpdatePacket(){
 		NBTTagCompound nbtTag = new NBTTagCompound();
 		writeDirectionToNBT(nbtTag);
-		return new SPacketUpdateTileEntity(this.pos, 0, nbtTag);
+		return new SPacketUpdateTileEntity(this.getPos(), 0, nbtTag);
 	}
 	/**
 	 * Receives the network packet made by <code>getDescriptionPacket()</code>
