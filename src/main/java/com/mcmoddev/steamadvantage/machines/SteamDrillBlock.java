@@ -32,7 +32,8 @@ public class SteamDrillBlock extends GUIBlock implements ITypedConduit {
 
 	public SteamDrillBlock(){
 		super(Material.PISTON);
-		super.setHardness(0.75f);
+		this.setPowerAdvantageHardness(0.75f);
+		this.setDefaultState(getDefaultState().withProperty(FACING, EnumFacing.DOWN));
 	}
 
 	/**
@@ -222,6 +223,7 @@ public class SteamDrillBlock extends GUIBlock implements ITypedConduit {
 	 */
 	@Override
 	public int getMetaFromState(final IBlockState bs) {
+		if(!bs.getProperties().containsKey(FACING)) return EnumFacing.DOWN.getIndex();
 		return ((EnumFacing)bs.getValue( FACING)).getIndex();
 	}
 
