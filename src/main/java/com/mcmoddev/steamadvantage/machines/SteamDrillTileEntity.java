@@ -44,6 +44,7 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	private Block targetBlock = null;
 	private List<ItemStack> targetBlockItems = null;
 	private EnumFacing oldDir = null;
+	private EnumFacing savedFacing = null;
 
 	
 	private boolean deferred = false;
@@ -84,9 +85,9 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 						progress++;
 						if(progress >= progressGoal){
 							// Mined it!
-							playSoundAtPosition(targetBlockCoord.getX()+0.5, targetBlockCoord.getY()+0.5, targetBlockCoord.getZ()+0.5, targetBlock.getSoundType().getPlaceSound(), SoundCategory.BLOCKS, 0.5f, 1f, this.getWorld());
+							playSoundAtPosition(targetBlockCoord.getX()+0.5, targetBlockCoord.getY()+0.5, targetBlockCoord.getZ()+0.5, targetBlock.getSoundType().getPlaceSound(), SoundCategory.BLOCKS, 0.5f, 1f, this.powerAdvantageWorld());
 							playSoundAtTileEntity( SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.AMBIENT, 0.5f, 1f, this);
-							getWorld().setBlockToAir(targetBlockCoord);
+							powerAdvantageWorld().setBlockToAir(targetBlockCoord);
 							for(ItemStack item : targetBlockItems){
 								addItem(item);
 							}
@@ -150,9 +151,10 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 		return in;
 	}
 
-	private EnumFacing trackDirection(){
+	private EnumFacing trackDirection(EnumFacing drillDirection){
 		for(EnumFacing dir : EnumFacing.values()){
-			if(getWorld().getBlockState(getPos().offset(dir)).getBlock() == Blocks.steam_track){
+			if(dir == drillDirection) continue;
+			if(powerAdvantageWorld().getBlockState(powerAdvantagePos().offset(dir)).getBlock() == Blocks.steam_track){
 				return dir;
 			}
 		}
@@ -161,30 +163,39 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	
 	private boolean followTrack(){
 		if(this.getEnergy(Power.steam_power) < ENERGY_COST_MOVE) return false;
-		EnumFacing trackDir = trackDirection();
+		EnumFacing drillDirection = getFacing();
+		EnumFacing trackDir = trackDirection(drillDirection);
 		if(trackDir == null) return false;
 		
 		// clone this block into neighboring block
 		this.untargetBlock();
-		World w = getWorld();
-		BlockPos nextPos = getPos().offset(trackDir);
-		w.setBlockState(nextPos, w.getBlockState(getPos()), 2);
-		SteamDrillTileEntity te = (SteamDrillTileEntity)w.getTileEntity(nextPos);
+		World w = powerAdvantageWorld();
+		BlockPos currentPos = powerAdvantagePos();
+		BlockPos nextPos = currentPos.offset(trackDir);
+		IBlockState trackState = w.getBlockState(nextPos);
+		w.setBlockState(nextPos, w.getBlockState(currentPos), 2);
+		TileEntity movedTile = w.getTileEntity(nextPos);
+		if(!(movedTile instanceof SteamDrillTileEntity)){
+			w.setBlockState(nextPos, trackState, 2);
+			return false;
+		}
+		SteamDrillTileEntity te = (SteamDrillTileEntity)movedTile;
 		NBTTagCompound dataTransfer = new NBTTagCompound();
 		this.writeToNBT(dataTransfer);
+		dataTransfer.setInteger("x", nextPos.getX());
+		dataTransfer.setInteger("y", nextPos.getY());
+		dataTransfer.setInteger("z", nextPos.getZ());
 		te.readFromNBT(dataTransfer);
 		te.setPos(nextPos);
 		te.validate();
+		te.subtractEnergy(ENERGY_COST_MOVE, Power.steam_power);
 		te.markDirty();
 		Arrays.fill(this.getInventory(), null);
 		
 		// replace this block with steam pipe
-		destroyDrillBit(this.getFacing());
-		w.setBlockState(getPos().offset(getFacing()), com.mcmoddev.poweradvantage.init.Blocks.steel_frame.getDefaultState());
-		w.setBlockState(getPos(), Blocks.steam_pipe.getDefaultState(), 2);
-		
-		
-		this.subtractEnergy(ENERGY_COST_MOVE, Power.steam_power);
+		destroyDrillBit(drillDirection);
+		w.setBlockState(currentPos.offset(drillDirection), com.mcmoddev.poweradvantage.init.Blocks.steel_frame.getDefaultState());
+		w.setBlockState(currentPos, Blocks.steam_pipe.getDefaultState(), 2);
 		return true;
 	}
 	
@@ -226,7 +237,7 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 		
 		
 		EnumFacing f = getFacing();
-		BlockPos n = getPos().offset(f);
+		BlockPos n = powerAdvantagePos().offset(f);
 		
 		// manage drill bits and find next block
 		if(redstone || this.getEnergy(Power.steam_power) <= 0){
@@ -244,10 +255,10 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 						hitEnd = true;
 						break;
 					}
-					if(getWorld().getBlockState(n).getBlock() != Blocks.drillbit){
-						if(getWorld().isAirBlock(n) || getWorld().getBlockState(n).getBlock().isReplaceable(getWorld(), n)){
+					if(powerAdvantageWorld().getBlockState(n).getBlock() != Blocks.drillbit){
+						if(powerAdvantageWorld().isAirBlock(n) || powerAdvantageWorld().getBlockState(n).getBlock().isReplaceable(powerAdvantageWorld(), n)){
 							// this block is not worth mining, replace it
-							DrillBitTileEntity.createDrillBitBlock(getWorld(), n, f);
+							DrillBitTileEntity.createDrillBitBlock(powerAdvantageWorld(), n, f);
 							this.subtractEnergy(ENERGY_COST_DRILLBIT, Power.steam_power);
 							flagSync = true;
 							break;
@@ -273,14 +284,14 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 					boolean moved = followTrack();
 					if(moved){
 						com.mcmoddev.poweradvantage.conduitnetwork.ConduitRegistry.getInstance()
-								.conduitBlockRemovedEvent(getWorld(), getWorld().provider.getDimension(), getPos(), Power.steam_power);
+								.conduitBlockRemovedEvent(powerAdvantageWorld(), powerAdvantageWorld().provider.getDimension(), powerAdvantagePos(), Power.steam_power);
 						return;
 					}
 				}
 			} else {
 				// currently drilling a block
 				// block validation
-				if(getWorld().isAirBlock(targetBlockCoord) || getWorld().getBlockState(targetBlockCoord).getBlock() != targetBlock){
+				if(powerAdvantageWorld().isAirBlock(targetBlockCoord) || powerAdvantageWorld().getBlockState(targetBlockCoord).getBlock() != targetBlock){
 					// Block changed! invalidate!
 					untargetBlock();
 					flagSync = true;
@@ -294,16 +305,16 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 		
 
 		// push inventory to adjacent chest
-		BlockPos adj = getPos().offset(f.getOpposite());
-		if(!redstone && !getWorld().isAirBlock(adj)){
+		BlockPos adj = powerAdvantagePos().offset(f.getOpposite());
+		if(!redstone && !powerAdvantageWorld().isAirBlock(adj)){
 			inventoryTransfer(adj,f);
 		}
 	}
 
 	private void destroyDrillBit(EnumFacing f) {
-		BlockPos n = getPos().offset(f);
-		while(getWorld().getBlockState(n).getBlock() == com.mcmoddev.steamadvantage.init.Blocks.drillbit){
-			getWorld().setBlockToAir(n);
+		BlockPos n = powerAdvantagePos().offset(f);
+		while(powerAdvantageWorld().getBlockState(n).getBlock() == com.mcmoddev.steamadvantage.init.Blocks.drillbit){
+			powerAdvantageWorld().setBlockToAir(n);
 			n = n.offset(f);
 		}
 	}
@@ -312,13 +323,13 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 		progress = 0;
 		targetBlockCoord = n;
 		progressGoal = this.getBlockStrength(n);
-		targetBlockState = getWorld().getBlockState(n); 
+		targetBlockState = powerAdvantageWorld().getBlockState(n);
 		targetBlock = targetBlockState.getBlock();
 		ItemStack crusherOutput = BaseMetalsCompat.getCrusherRecipeOutput(targetBlockState);
 		if(crusherOutput != null){
 			targetBlockItems = Arrays.asList(crusherOutput);
 		} else {
-			targetBlockItems = targetBlock.getDrops(getWorld(), n, getWorld().getBlockState(n), 0);
+			targetBlockItems = targetBlock.getDrops(powerAdvantageWorld(), n, powerAdvantageWorld().getBlockState(n), 0);
 		}
 		deferred = false;
 	}
@@ -338,9 +349,32 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	}
 	
 	private EnumFacing getFacing(){
-		return (EnumFacing)world.getBlockState(getPos()).getValue(SteamDrillBlock.FACING);
+		IBlockState state = powerAdvantageWorld().getBlockState(powerAdvantagePos());
+		if(state.getProperties().containsKey(SteamDrillBlock.FACING)){
+			savedFacing = (EnumFacing)state.getValue(SteamDrillBlock.FACING);
+			return savedFacing;
+		}
+		if(savedFacing == null) savedFacing = inferFacing();
+		return savedFacing;
 	}
-	
+
+	private EnumFacing inferFacing(){
+		if(targetBlockCoord != null){
+			int dx = targetBlockCoord.getX() - powerAdvantagePos().getX();
+			int dy = targetBlockCoord.getY() - powerAdvantagePos().getY();
+			int dz = targetBlockCoord.getZ() - powerAdvantagePos().getZ();
+			if(dx != 0 && dy == 0 && dz == 0) return dx > 0 ? EnumFacing.EAST : EnumFacing.WEST;
+			if(dy != 0 && dx == 0 && dz == 0) return dy > 0 ? EnumFacing.UP : EnumFacing.DOWN;
+			if(dz != 0 && dx == 0 && dy == 0) return dz > 0 ? EnumFacing.SOUTH : EnumFacing.NORTH;
+		}
+		for(EnumFacing dir : EnumFacing.values()){
+			if(powerAdvantageWorld().getBlockState(powerAdvantagePos().offset(dir)).getBlock() == Blocks.drillbit){
+				return dir;
+			}
+		}
+		return oldDir == null ? EnumFacing.DOWN : oldDir;
+	}
+
 	private void energyDecay() {
 		if(getEnergy(Power.steam_power) > 0){
 			subtractEnergy(Power.ENERGY_LOST_PER_TICK,Power.steam_power);
@@ -348,27 +382,27 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	}
 	
 	private boolean hasRedstoneSignal() {
-		return getWorld().isBlockPowered(getPos());
+		return powerAdvantageWorld().isBlockPowered(powerAdvantagePos());
 	}
 	
 	private boolean canMine(BlockPos coord){
-		Block b = getWorld().getBlockState(coord).getBlock();
+		Block b = powerAdvantageWorld().getBlockState(coord).getBlock();
 		return !(b == net.minecraft.init.Blocks.BEDROCK || b == net.minecraft.init.Blocks.BARRIER);
 	}
 	
 	private int getBlockStrength(BlockPos coord){
-		if(getWorld().isAirBlock(coord)){
+		if(powerAdvantageWorld().isAirBlock(coord)){
 			return 0;
 		}
-		IBlockState bs = getWorld().getBlockState(coord);
+		IBlockState bs = powerAdvantageWorld().getBlockState(coord);
 		Block block = bs.getBlock();
-		return (int)(Math.max(MINING_TIME_FACTOR * block.getBlockHardness(bs,getWorld(), coord),0.5f * MINING_TIME_FACTOR));
+		return (int)(Math.max(MINING_TIME_FACTOR * block.getBlockHardness(bs,powerAdvantageWorld(), coord),0.5f * MINING_TIME_FACTOR));
 	}
 	
 	
 
 	private void inventoryTransfer(BlockPos adj, EnumFacing otherFace) {
-		TileEntity te = getWorld().getTileEntity(adj);
+		TileEntity te = powerAdvantageWorld().getTileEntity(adj);
 		if(te instanceof IInventory ){
 			ISidedInventory inv = InventoryWrapper.wrap((IInventory)te);
 			int[] accessibleSlots = inv.getSlotsForFace(otherFace);
@@ -406,6 +440,8 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	public NBTTagCompound writeToNBT(NBTTagCompound tagRoot){
 		super.writeToNBT(tagRoot);
 		tagRoot.setShort("progress",(short)progress);
+		if(powerAdvantageWorld() != null) savedFacing = getFacing();
+		if(savedFacing != null) tagRoot.setByte("Facing", (byte)savedFacing.getIndex());
 		if(targetBlockCoord != null){
 			tagRoot.setInteger("targetX", targetBlockCoord.getX());
 			tagRoot.setInteger("targetY", targetBlockCoord.getY());
@@ -417,6 +453,12 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 	@Override
 	public void readFromNBT(NBTTagCompound tagRoot){
 		super.readFromNBT(tagRoot);
+		if(tagRoot.hasKey("Facing")){
+			int facingIndex = tagRoot.getByte("Facing");
+			if(facingIndex >= 0 && facingIndex < EnumFacing.values().length){
+				savedFacing = EnumFacing.getFront(facingIndex);
+			}
+		}
 		if(tagRoot.hasKey("progress")){
 			progress = tagRoot.getShort("progress");
 		}
@@ -425,7 +467,7 @@ public class SteamDrillTileEntity extends cyano.poweradvantage.api.simple.TileEn
 			int y = tagRoot.getInteger("targetY");
 			int z = tagRoot.getInteger("targetZ");
 			// Note: world object for tile entities is set AFTER loading them from NBT
-			if(getWorld() == null){
+			if(powerAdvantageWorld() == null){
 				this.deferredTargetBlock(new BlockPos(x,y,z));
 			} else {
 				this.targetBlock(new BlockPos(x,y,z));

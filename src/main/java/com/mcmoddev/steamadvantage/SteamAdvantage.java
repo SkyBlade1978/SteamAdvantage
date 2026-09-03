@@ -41,8 +41,8 @@ public class SteamAdvantage
 	public static final String MODID = "steamadvantage";
 	/** The display name for this mod */
 	public static final String NAME = "Steam Advantage";
-	/** The version of this mod, in the format major.minor.update */
-	public static final String VERSION = "2.2.1";
+	/** The target-qualified release version of this mod. */
+	public static final String VERSION = "2.2.1.110021";
 
 	public static float MUSKET_DAMAGE = 20;
 	public static int MUSKET_RELOAD = 20*5;
