@@ -56,9 +56,12 @@ jobs:
           dependency="$GITHUB_WORKSPACE/.ci-dependencies/PowerAdvantage"
           mirror="$RUNNER_TEMP/reborncore-mirror"
           chmod +x "$dependency/gradlew"
-          bash "$dependency/gradle/stage-reborncore-release.sh" "$mirror"
-          "$dependency/gradlew" -p "$dependency" deobfJar verifyReleaseDependencies \
-            -PrebornCoreVerificationRepository="$mirror" --no-daemon --stacktrace
+          (
+            cd "$dependency"
+            bash gradle/stage-reborncore-release.sh "$mirror"
+            ./gradlew deobfJar verifyReleaseDependencies \
+              -PrebornCoreVerificationRepository="$mirror" --no-daemon --stacktrace
+          )
           jar="$dependency/build/libs-dev/PowerAdvantage-2.4.1.110021-deobf.jar"
           test -f "$jar"
           echo "jar=$jar" >> "$GITHUB_OUTPUT"
