@@ -2,6 +2,10 @@
 
 Steam Advantage adds steam-powered machines and infrastructure to Power Advantage for Minecraft 1.10.2.
 
+The maintained implementation namespace is `zone.moddev.mc.steamadvantage`. This coordinated release
+requires Power Advantage `2.4.3.110021` or newer; update the two mods together. Runtime registry,
+tile-entity, asset, configuration, and saved-world identities are unchanged.
+
 The cross-mod [Advantage Works 1.10.2 Handbook](https://github.com/MinecraftModDevelopmentMods/PowerAdvantage/blob/master-1.10.2/docs/1.10/README.md) includes the Steam Engineer's Handbook, rated figures, commissioning layouts, and persistence tests. The [MMD material and fluid compatibility specification](https://github.com/MinecraftModDevelopmentMods/PowerAdvantage/blob/master-1.10.2/docs/1.10/mmd-material-fluid-compatibility.md) defines crude-oil aliases and OreSpawn ownership.
 
 ## Building Minecraft 1.10.2
@@ -31,4 +35,4 @@ For Eclipse, import this repository as an existing Gradle project and run:
 gradlew.bat cleanEclipse verifyEclipseProductionClasspath
 ```
 
-Power Advantage is required at compile time and runtime but is never bundled. OreSpawn is required transitively by Power Advantage. Base Metals remains a required distribution dependency while its integrations stay reflection-based and absent from the compile classpath.
+Power Advantage `2.4.3.110021` or newer is required at compile time and runtime but is never bundled. OreSpawn is required transitively by Power Advantage. Base Metals remains a required distribution dependency while its integrations stay reflection-based and absent from the compile classpath.
