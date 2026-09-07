@@ -1,3 +1,7 @@
+Steam Advantage 2.2.3.110021
+
+- Treat Power Advantage, Mineralogy, and legacy crude-oil fluid aliases equally in the oil boiler.
+- Keep explicit fluid_fuel_values entries authoritative over built-in compatibility values.
 Steam Advantage 2.2.2.110021
 
 - Preserve Steam Pump fluid contents across a full game restart while retaining legacy TankOut compatibility.
