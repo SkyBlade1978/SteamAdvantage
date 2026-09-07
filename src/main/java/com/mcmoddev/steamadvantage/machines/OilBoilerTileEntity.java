@@ -1,6 +1,7 @@
 package com.mcmoddev.steamadvantage.machines;
 
 import cyano.poweradvantage.api.ConduitType;
+import cyano.poweradvantage.api.FluidCategoryRegistry;
 import cyano.poweradvantage.api.PowerRequest;
 import cyano.poweradvantage.api.fluid.FluidRequest;
 import com.mcmoddev.poweradvantage.init.Fluids;
@@ -109,6 +110,12 @@ public class OilBoilerTileEntity extends cyano.poweradvantage.api.simple.TileEnt
 			if(fuelPerBucket != null){
 				flammibilityCache.put(fluid,0.001F*fuelPerBucket);
 				return fuelPerBucket;
+			}
+			// Built-in crude-oil aliases share the historical oil value. Explicit
+			// fluid_fuel_values entries above always take precedence.
+			if(FluidCategoryRegistry.matches(FluidCategoryRegistry.CRUDE_OIL, fluid)){
+				flammibilityCache.put(fluid, 5.0F);
+				return 5000.0F;
 			}
 			// second, check universal bucket fuel registry
 			ItemStack bucket = new ItemStack(ForgeModContainer.getInstance().universalBucket);
