@@ -1,3 +1,13 @@
+Steam Advantage 2.2.3.110021
+
+- Treat Power Advantage, Mineralogy, and legacy crude-oil fluid aliases equally in the oil boiler.
+- Keep explicit fluid_fuel_values entries authoritative over built-in compatibility values.
+Steam Advantage 2.2.2.110021
+
+- Preserve Steam Pump fluid contents across a full game restart while retaining legacy TankOut compatibility.
+- Preserve Geothermal Boiler temperature across a full game restart while accepting the legacy Tempoerature key.
+- Scale Steam Crusher comparator output from 0 to 15 according to its input-slot fullness.
+
 Steam Advantage 2.2.1.110021
 
 - Move the Minecraft 1.10.2 build to ForgeGradle 7 and Gradle 9.6.1.

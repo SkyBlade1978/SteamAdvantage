@@ -199,7 +199,7 @@ public class RockCrusherTileEntity extends cyano.poweradvantage.api.simple.TileE
 
 	public int getComparatorOutput() {
 		if(inventory[0] == null) return 0;
-		return Math.min(Math.max(15 * inventory[0].stackSize * inventory[0].getMaxStackSize() / inventory[0].getMaxStackSize(),1),15);
+		return Math.min(1 + 14 * inventory[0].stackSize / inventory[0].getMaxStackSize(), 15);
 	}
 	
 ///// Item Handling (for hoppers) /////
