@@ -1,3 +1,8 @@
+Steam Advantage 2.2.4.110021
+
+- Move the implementation namespace to zone.moddev.mc.steamadvantage while preserving runtime identities.
+- Require Power Advantage 2.4.3.110021 or newer for the coordinated namespace migration.
+
 Steam Advantage 2.2.3.110021
 
 - Treat Power Advantage, Mineralogy, and legacy crude-oil fluid aliases equally in the oil boiler.
